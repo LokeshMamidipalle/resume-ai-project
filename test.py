@@ -1,5 +1,12 @@
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse
+import PyPDF2
 
+app = FastAPI()
+
+skills_list = ["python","java","sql","machine learning","aws"]
+
+# ---------- BEAUTIFUL WEB PAGE ----------
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
@@ -12,56 +19,46 @@ def home():
 body{
     margin:0;
     font-family:Arial;
-    background:linear-gradient(135deg,#667eea,#764ba2);
+    background:linear-gradient(135deg,#4f46e5,#9333ea);
     height:100vh;
     display:flex;
-    align-items:center;
     justify-content:center;
+    align-items:center;
 }
 
 .card{
     background:white;
     padding:40px;
-    border-radius:15px;
+    border-radius:20px;
     width:420px;
     text-align:center;
-    box-shadow:0 15px 40px rgba(0,0,0,0.2);
+    box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
 
 h1{margin-bottom:5px;}
 p{color:#666;}
 
-input[type=file]{
-    margin-top:20px;
-}
-
 button{
     margin-top:20px;
-    padding:12px 25px;
+    padding:14px 25px;
     border:none;
-    border-radius:8px;
-    background:#667eea;
+    border-radius:10px;
+    background:#4f46e5;
     color:white;
     font-size:16px;
     cursor:pointer;
 }
 
 button:hover{
-    background:#5563c1;
+    background:#4338ca;
 }
 
 .result{
     margin-top:25px;
     padding:15px;
-    background:#f5f5f5;
-    border-radius:8px;
+    background:#f3f4f6;
+    border-radius:10px;
     text-align:left;
-}
-
-.loading{
-    margin-top:15px;
-    color:#667eea;
-    font-weight:bold;
 }
 </style>
 </head>
@@ -77,7 +74,7 @@ button:hover{
 <br>
 <button onclick="upload()">Analyze Resume</button>
 
-<div id="loading" class="loading"></div>
+<div id="loading"></div>
 <div id="result" class="result"></div>
 
 </div>
@@ -114,3 +111,12 @@ async function upload(){
 </body>
 </html>
 """
+
+# ---------- RESUME PROCESS ----------
+@app.post("/upload")
+async def upload_resume(file: UploadFile = File(...)):
+    reader = PyPDF2.PdfReader(file.file)
+    text="".join(page.extract_text() for page in reader.pages).lower()
+
+    found=[s for s in skills_list if s in text]
+    return {"skills_found": found}
